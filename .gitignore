@@ -1,0 +1,7 @@
+.venv/
+# Ignore the default SQLite database file
+*.sqlite3
+# Ignore CSV files in the imports folder
+imports/*.csv
+#ignore pyc files
+*.pyc
