@@ -1,0 +1,78 @@
+<div
+  class="bg-white overflow-hidden shadow-sm rounded-lg divide-y divide-gray-200"
+>
+  <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-indigo-50 to-blue-50">
+    <h3 class="text-xl leading-6 font-medium text-indigo-900">
+      Student Schedule: {{ student.student_name }}
+    </h3>
+    <div class="mt-1 max-w-2xl text-sm text-gray-600">
+      <p><strong>Grade:</strong> {{ student.grade }}</p>
+      <p><strong>Email:</strong> {{ student.stu_email }}</p>
+      <p><strong>GPA:</strong> {{ student.current_gpa|default:"N/A" }}</p>
+    </div>
+  </div>
+
+  {% if courses %}
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Course
+          </th>
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Period
+          </th>
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Teacher
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for course_data in courses %}
+        <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+          >
+            {{ course_data.course.course_name }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ course_data.period }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {% if course_data.teacher %} {{ course_data.teacher.full_name }} 
+            {% else %}
+            <span class="text-gray-400">Not Assigned</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="px-4 py-5 sm:p-6">
+    <p class="text-sm text-gray-500">
+      This student is not enrolled in any courses.
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+    <button
+      id="close-schedule-btn"
+      class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+    >
+      Close
+    </button>
+  </div>
+</div>

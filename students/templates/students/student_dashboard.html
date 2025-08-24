@@ -1,31 +1,87 @@
 {% extends "base.html" %} {% block title %}Student Dashboard{% endblock %} {%
 block content %}
-<h1>Welcome, {{ student.student_name }}</h1>
+<div id="studentApp">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      Welcome, {{ student.student_name }}
+    </h1>
+    <p class="text-gray-600 mt-2">Here's an overview of your courses.</p>
+  </div>
 
-<h2>Your Courses</h2>
+  <div class="mb-6">
+    <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2">
+      Your Courses
+    </h2>
+  </div>
 
-{% if not courses %}
-<p>You are not currently enrolled in any courses.</p>
-{% else %}
-<table class="course-list">
-  <thead>
-    <tr>
-      <th>Course</th>
-      <th>Period</th>
-      <th>Teacher</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for course_data in courses %}
-    <tr>
-      <td>{{ course_data.course.course_name }}</td>
-      <td>{{ course_data.period }}</td>
-      <td>
-        {% if course_data.teacher %}{{ course_data.teacher.full_name }}{% else
-        %}Not Assigned{% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endif %} {% endblock %}
+  {% if not courses %}
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+    <p class="text-gray-500">You are not currently enrolled in any courses.</p>
+  </div>
+  {% else %}
+  <div class="bg-white shadow overflow-hidden rounded-lg">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Course
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Period
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Teacher
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for course_data in courses %}
+          <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              {{ course_data.course.course_name }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ course_data.period }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {% if course_data.teacher %} {{ course_data.teacher.full_name }}
+              {% else %}
+              <span class="text-gray-400">Not Assigned</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  const { createApp } = Vue;
+
+  createApp({
+    data() {
+      return {
+        // Data for future enhancements
+      };
+    },
+    methods: {
+      // Methods for future enhancements
+    },
+  }).mount("#studentApp");
+</script>
+{% endblock %}

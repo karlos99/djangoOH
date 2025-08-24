@@ -1,44 +1,372 @@
-{% extends "base.html" %} {% block title %}Staff Dashboard{% endblock %} {%
-block content %}
-<h1>Welcome, {{ staff.full_name }}</h1>
+{% extends "base.html" %} {% block title %}Staff Dashboard{% endblock %} 
+{%block content %}
+<div id="staffApp">
+  <!-- Student Schedule Modal -->
+  {% verbatim %}
+  <div
+    v-if="showStudentSchedule"
+    class="fixed inset-0 z-10 overflow-y-auto"
+    aria-labelledby="modal-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+    >
+      <!-- Background overlay -->
+      <div
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+        aria-hidden="true"
+        @click="closeStudentSchedule"
+      ></div>
 
-<h2>Your Courses</h2>
+      <!-- Modal panel -->
+      <div
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
+      >
+        <div v-if="studentScheduleLoading" class="p-6 flex justify-center">
+          <svg
+            class="animate-spin h-10 w-10 text-indigo-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+        <div v-else v-html="studentScheduleHtml"></div>
+      </div>
+    </div>
+  </div>
+  {% endverbatim %}
 
-{% if not courses %}
-<p>You are not currently assigned to any courses.</p>
-{% else %} {% for course_id, course_data in courses.items %}
-<div class="course-card">
-  <h3>{{ course_data.name }}</h3>
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      Welcome, {{ staff.full_name }}
+    </h1>
+    <p class="text-gray-600 mt-2">
+      Here's an overview of your courses and students.
+    </p>
+  </div>
 
-  {% for period, students in course_data.periods.items %}
-  <div class="period-section">
-    <h4>Period: {{ period }}</h4>
+  <div class="mb-6">
+    <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2">
+      Your Courses
+    </h2>
+  </div>
 
-    {% if students %}
-    <table class="student-list">
-      <thead>
-        <tr>
-          <th>Student Name</th>
-          <th>Grade</th>
-          <th>Current GPA</th>
-          <th>Email</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for student in students %}
-        <tr>
-          <td>{{ student.student_name }}</td>
-          <td>{{ student.grade }}</td>
-          <td>{{ student.current_gpa|default:"N/A" }}</td>
-          <td>{{ student.stu_email }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <p>No students enrolled in this period.</p>
+  {% if not courses %}
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+    <p class="text-gray-500">You are not currently assigned to any courses.</p>
+  </div>
+  {% else %}
+  <div class="flex flex-col md:flex-row">
+    <!-- Course List -->
+    <div class="w-full md:w-1/3 mb-6 md:mb-0 md:pr-4">
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200 bg-indigo-50">
+          <h3 class="text-lg leading-6 font-medium text-indigo-800">
+            Your Courses
+          </h3>
+        </div>
+        <div class="overflow-y-auto" style="max-height: 70vh">
+          {% for course in courses %}
+          <div class="border-b border-gray-200 last:border-b-0">
+            <div
+              class="px-4 py-4 bg-white hover:bg-gray-50 cursor-pointer"
+              @click="toggleCourse('{{ course.id }}')"
+              :class="{'bg-indigo-50': expandedCourses['{{ course.id }}']}"
+            >
+              <div class="flex justify-between items-center">
+                <h4
+                  class="text-base font-medium text-gray-900"
+                  :class="{'text-indigo-600': expandedCourses['{{ course.id }}']}"
+                >
+                  <span data-course-id="{{ course.id }}">{{ course.name }}</span>
+                </h4>
+                <svg
+                  :class="{'transform rotate-180': expandedCourses['{{ course.id }}']}"
+                  class="h-5 w-5 text-gray-400 transition-transform duration-200"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">
+                {{ course.total_students }} students across {{ course.periods|length }} periods
+              </p>
+            </div>
+            
+            <!-- Periods List -->
+            <div v-show="expandedCourses['{{ course.id }}']" class="bg-gray-50 border-t border-gray-200">
+              {% for period_data in course.periods %}
+              <div
+                class="px-4 py-3 border-b border-gray-200 last:border-b-0 hover:bg-gray-100 cursor-pointer"
+                @click.stop="selectPeriod('{{ course.id }}', '{{ period_data.period }}', '{{ course.name }}')"
+                :class="{'bg-indigo-100 hover:bg-indigo-200': selectedCourse === '{{ course.id }}' && selectedPeriod === '{{ period_data.period }}'}"
+              >
+                <div class="flex justify-between items-center">
+                  <span class="font-medium text-sm text-gray-700">Period {{ period_data.period }}</span>
+                  <span class="text-xs text-gray-500">{{ period_data.count }} students</span>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Student List -->
+    <div class="w-full md:w-2/3">
+      <div
+        v-if="!selectedCourse || !selectedPeriod"
+        class="bg-white shadow rounded-lg p-8 text-center"
+      >
+        {% verbatim %}
+        <svg
+          class="w-16 h-16 text-indigo-300 mx-auto"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+          ></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">Select a course and period</h3>
+        <p class="mt-2 text-sm text-gray-500">
+          Choose a course and period from the sidebar to view students
+        </p>
+        {% endverbatim %}
+      </div>
+
+      <div v-else class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200 bg-indigo-50">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg leading-6 font-medium text-indigo-800">
+              {% verbatim %}{{ selectedCourseName }} - Period {{ selectedPeriod }}{% endverbatim %}
+            </h3>
+          </div>
+        </div>
+
+        <!-- Student List -->
+        <div class="overflow-y-auto" style="max-height: 60vh">
+          {% verbatim %}
+          <div v-if="loadingStudents" class="p-8 text-center">
+            <svg
+              class="animate-spin h-8 w-8 text-indigo-500 mx-auto"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <p class="mt-2 text-sm text-gray-500">Loading students...</p>
+          </div>
+
+          <div
+            v-else-if="filteredStudents.length === 0"
+            class="p-8 text-center"
+          >
+            <p class="text-sm text-gray-500">
+              No students found for this period.
+            </p>
+          </div>
+
+          <table v-else class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Student Name
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Grade
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Period
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  GPA
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr
+                v-for="(student, index) in filteredStudents"
+                :key="student.id"
+                :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'"
+              >
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <button
+                    @click="viewStudentSchedule(student.id)"
+                    class="text-indigo-600 hover:text-indigo-900 font-medium hover:underline focus:outline-none"
+                  >
+                    {{ student.name }}
+                  </button>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ student.grade }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ student.period }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ student.gpa || 'N/A' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          {% endverbatim %}
+        </div>
+      </div>
+    </div>
     {% endif %}
   </div>
-  {% endfor %}
 </div>
-{% endfor %} {% endif %} {% endblock %}
+
+<script>
+  const { createApp } = Vue;
+
+  createApp({
+    data() {
+      return {
+        courses: {{ courses_json|safe }},
+        showStudentSchedule: false,
+        studentScheduleLoading: false,
+        studentScheduleHtml: "",
+        expandedCourses: {},
+        selectedCourse: null,
+        selectedCourseName: '',
+        selectedPeriod: '',
+        loadingStudents: false,
+        courseStudents: []
+      };
+    },
+    computed: {
+      filteredStudents() {
+        if (!this.courseStudents) return [];
+        
+        return this.courseStudents;
+      }
+    },
+    mounted() {
+      // Set up global event delegation for dynamically loaded content
+      document.addEventListener('click', (event) => {
+        if (event.target.matches('.view-student-btn')) {
+          const studentId = event.target.dataset.studentId;
+          this.viewStudentSchedule(studentId);
+        }
+      });
+    },
+    methods: {
+      toggleCourse(courseId) {
+        // Toggle course expansion state
+        this.expandedCourses = {
+          ...this.expandedCourses,
+          [courseId]: !this.expandedCourses[courseId]
+        };
+      },
+      selectPeriod(courseId, periodId, courseName) {
+        this.selectedCourse = courseId;
+        this.selectedCourseName = courseName;
+        this.selectedPeriod = periodId;
+        this.loadingStudents = true;
+        
+        // Fetch students for this course and period
+        fetch(`{% url 'load_period_students' '0' '0' %}`.replace('0/period/0', `${courseId}/period/${periodId}`))
+          .then(response => response.json())
+          .then(data => {
+            this.courseStudents = data.students;
+            this.loadingStudents = false;
+          })
+          .catch(error => {
+            console.error('Error loading students:', error);
+            this.loadingStudents = false;
+            this.courseStudents = [];
+          });
+      },
+      viewStudentSchedule(studentId) {
+        console.log("Viewing student schedule for ID:", studentId);
+        this.showStudentSchedule = true;
+        this.studentScheduleLoading = true;
+        this.studentScheduleHtml = "";
+
+        fetch(`{% url 'student_schedule' 0 %}`.replace("0", studentId))
+          .then((response) => response.text())
+          .then((data) => {
+            this.studentScheduleHtml = data;
+            this.studentScheduleLoading = false;
+            
+            // Add event listener to close button after loading
+            this.$nextTick(() => {
+              const closeBtn = document.getElementById('close-schedule-btn');
+              if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                  this.closeStudentSchedule();
+                });
+              }
+            });
+          })
+          .catch((error) => {
+            console.error("Error loading student schedule:", error);
+            this.studentScheduleHtml =
+              '<div class="p-4 text-red-500">Error loading student schedule</div>';
+            this.studentScheduleLoading = false;
+          });
+      },
+      closeStudentSchedule() {
+        this.showStudentSchedule = false;
+      }
+    },
+  }).mount("#staffApp");
+</script>
+{% endblock %}
