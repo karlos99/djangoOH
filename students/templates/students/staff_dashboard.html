@@ -1,0 +1,44 @@
+{% extends "base.html" %} {% block title %}Staff Dashboard{% endblock %} {%
+block content %}
+<h1>Welcome, {{ staff.full_name }}</h1>
+
+<h2>Your Courses</h2>
+
+{% if not courses %}
+<p>You are not currently assigned to any courses.</p>
+{% else %} {% for course_id, course_data in courses.items %}
+<div class="course-card">
+  <h3>{{ course_data.name }}</h3>
+
+  {% for period, students in course_data.periods.items %}
+  <div class="period-section">
+    <h4>Period: {{ period }}</h4>
+
+    {% if students %}
+    <table class="student-list">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Grade</th>
+          <th>Current GPA</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ student.student_name }}</td>
+          <td>{{ student.grade }}</td>
+          <td>{{ student.current_gpa|default:"N/A" }}</td>
+          <td>{{ student.stu_email }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No students enrolled in this period.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endfor %} {% endif %} {% endblock %}

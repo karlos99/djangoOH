@@ -1,7 +1,15 @@
 from django.contrib import admin
-from .models import Student, Staff, Course, Enrollment
+from .models import Student, Staff, Course, Enrollment, UserProfile
 
 # Register your models here.
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'user_type', 'staff', 'student']
+    list_filter = ['user_type']
+    search_fields = ['user__username', 'user__email']
+    list_per_page = 50
 
 
 @admin.register(Student)

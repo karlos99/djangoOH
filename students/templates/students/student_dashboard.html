@@ -1,0 +1,31 @@
+{% extends "base.html" %} {% block title %}Student Dashboard{% endblock %} {%
+block content %}
+<h1>Welcome, {{ student.student_name }}</h1>
+
+<h2>Your Courses</h2>
+
+{% if not courses %}
+<p>You are not currently enrolled in any courses.</p>
+{% else %}
+<table class="course-list">
+  <thead>
+    <tr>
+      <th>Course</th>
+      <th>Period</th>
+      <th>Teacher</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for course_data in courses %}
+    <tr>
+      <td>{{ course_data.course.course_name }}</td>
+      <td>{{ course_data.period }}</td>
+      <td>
+        {% if course_data.teacher %}{{ course_data.teacher.full_name }}{% else
+        %}Not Assigned{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %} {% endblock %}

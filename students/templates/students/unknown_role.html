@@ -1,0 +1,16 @@
+{% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
+content %}
+<h2>Welcome to the School Management System</h2>
+
+{% if user.profile.user_type == 'UNKNOWN' %}
+<div class="alert alert-warning">
+  <p>Your account has not been linked to a staff or student record yet.</p>
+  <p>
+    Please contact an administrator to associate your email with the correct
+    record.
+  </p>
+</div>
+{% endif %}
+
+<p>Redirecting to the appropriate dashboard...</p>
+{% endblock %}
